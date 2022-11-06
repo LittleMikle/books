@@ -2,15 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/LittleMikle/rest2.git/pkg/mocks"
+	"fmt"
 	"github.com/LittleMikle/rest2.git/pkg/models"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 )
 
-func AddBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) AddBook(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 
@@ -21,8 +20,11 @@ func AddBook(w http.ResponseWriter, r *http.Request) {
 	var book models.Book
 	json.Unmarshal(body, &book)
 
-	book.ID = rand.Intn(100)
-	mocks.Books = append(mocks.Books, book)
+	if result := h.DB.Create(&book); result.Error != nil {
+		fmt.Println(result.Error)
+	}
+	//book.ID = rand.Intn(100)
+	//mocks.Books = append(mocks.Books, book)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")

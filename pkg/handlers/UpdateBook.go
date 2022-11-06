@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/LittleMikle/rest2.git/pkg/mocks"
+	"fmt"
 	"github.com/LittleMikle/rest2.git/pkg/models"
 	"github.com/gorilla/mux"
 	"io/ioutil"
@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (h handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
 
@@ -25,17 +25,17 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	var updatedBook models.Book
 	json.Unmarshal(body, &updatedBook)
 
-	for index, book := range mocks.Books {
-		if book.ID == id {
-			book.Title = updatedBook.Title
-			book.Author = updatedBook.Author
+	var book models.Book
 
-			mocks.Books[index] = book
-
-			w.WriteHeader(http.StatusOK)
-			w.Header().Add("Content-Type", "application/json")
-			json.NewEncoder(w).Encode("Updated")
-			break
-		}
+	if result := h.DB.First(&book, id); result.Error != nil {
+		fmt.Println(result.Error)
 	}
+	book.Title = updatedBook.Title
+	book.Author = updatedBook.Author
+
+	h.DB.Save(&book)
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Add("Content-Type", "application/json")
+	json.NewEncoder(w).Encode("Updated")
 }
